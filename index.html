@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Repte de Muntanya 🏔️</title>
+    <style>
+        :root {
+            --primary: #ff5722;
+            --primary-dark: #e64a19;
+            --bg-light-top: #7ac1eb;
+            --bg-light-bottom: #bfe3f7;
+            --bg-dark-top: #0f172a;
+            --bg-dark-bottom: #1e1b4b;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text: #1e293b;
+        }
+
+        html, body {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #000;
+        }
+
+        #viewport {
+            position: relative;
+            width: 100%;
+            max-width: 450px;
+            height: 100dvh;
+            margin: 0 auto;
+            background: linear-gradient(to bottom, var(--bg-light-top), var(--bg-light-bottom));
+            overflow: hidden;
+            transition: background 1.5s ease;
+            box-shadow: 0 0 40px rgba(0,0,0,0.5);
+        }
+
+        #viewport.night {
+            background: linear-gradient(to bottom, var(--bg-dark-top), var(--bg-dark-bottom));
+        }
+
+        .star {
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+            width: 2px;
+            height: 2px;
+            opacity: 0;
+            transition: opacity 1.5s ease;
+        }
+        .night .star {
+            opacity: 0.8;
+            animation: twinkle 2s infinite alternate;
+        }
+        @keyframes twinkle { from { opacity: 0.2; } to { opacity: 1; } }
+
+        .mountain-bg {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 65%;
+            background: #475569;
+            clip-path: polygon(0% 30%, 15% 45%, 40% 15%, 65% 55%, 100% 100%, 0% 100%);
+            z-index: 1;
+            opacity: 0.5;
+        }
+
+        .mountain-main {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 55%;
+            background: #334155;
+            clip-path: polygon(100% 100%, 80% 85%, 50% 60%, 20% 35%, 15% 15%, 0% 100%);
+            z-index: 2;
+        }
+
+        .trail {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 55%;
+            border-top: 6px dashed rgba(255,255,255,0.4);
+            clip-path: polygon(100% 100%, 80% 85%, 50% 60%, 20% 35%, 15% 15%, 13% 15%, 48% 61%, 78% 86%, 100% 100%);
+            z-index: 3;
+        }
+
+        .summit-zone {
+            position: absolute;
+            bottom: 48%; 
+            left: 12%;
+            font-size: 2.5rem;
+            z-index: 3;
+            animation: float 2s infinite ease-in-out;
+        }
+
+        /* --- PUNTS DE CONTROL (KM) DEL CAMÍ --- */
+        .milestone-marker {
+            position: absolute;
+            z-index: 3;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        .milestone-dot {
+            width: 10px;
+            height: 10px;
+            background: var(--primary);
+            border: 2px solid white;
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(255, 87, 34, 0.6);
+        }
+
+        .milestone-label {
+            background: rgba(15, 23, 42, 0.75);
+            color: #fff;
+            font-size: 0.65rem;
+            font-weight: bold;
+            padding: 2px 5px;
+            border-radius: 4px;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        /* --- EL NINOTET JORGE (COS DE PAL + CAP DE FOTO) --- */
+        #runner-container {
+            position: absolute;
+            bottom: -5%; 
+            left: 105%;
+            z-index: 4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transform: translate(-50%, 50%);
+            transition: bottom 0.25s cubic-bezier(0.25, 1, 0.5, 1), left 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+            pointer-events: none;
+        }
+
+        .jorge-head {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            background-image: url('tu.png');
+            background-size: cover;
+            background-position: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            z-index: 5;
+        }
+
+        .stick-body {
+            position: relative;
+            width: 2px;
+            height: 25px;
+            background: #fff;
+            margin-top: -1px;
+        }
+
+        .stick-body::before {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: -8px;
+            width: 18px;
+            height: 2px;
+            background: #fff;
+            transform: rotate(-15deg);
+        }
+
+        .leg {
+            position: absolute;
+            bottom: -15px;
+            width: 2px;
+            height: 16px;
+            background: #fff;
+            transform-origin: top center;
+        }
+        .leg-left { left: -3px; transform: rotate(25deg); }
+        .leg-right { right: -3px; transform: rotate(-25deg); }
+
+        .running .leg-left { animation: run-leg-1 0.15s infinite alternate linear; }
+        .running .leg-right { animation: run-leg-2 0.15s infinite alternate linear; }
+        .running { animation: body-bob 0.15s infinite alternate linear; }
+
+        @keyframes run-leg-1 { from { transform: rotate(45deg); } to { transform: rotate(-35deg); } }
+        @keyframes run-leg-2 { from { transform: rotate(-35deg); } to { transform: rotate(45deg); } }
+        @keyframes body-bob { from { transform: translate(-50%, 45%) translateY(-2px); } to { transform: translate(-50%, 55%) translateY(2px); } }
+
+        /* --- TARGETES DE TEXT --- */
+        .card-container {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .level-card {
+            display: none;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.25);
+            border: 2px solid var(--primary);
+            text-align: center;
+            pointer-events: auto;
+            animation: slideDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .card-title {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--primary);
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .card-text {
+            font-size: 1.05rem;
+            line-height: 1.5;
+            color: var(--text);
+            margin-bottom: 18px;
+            font-weight: 500;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            font-size: 1rem;
+            font-weight: 700;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(255, 87, 34, 0.3);
+            transition: background 0.2s, transform 0.1s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn:active {
+            transform: scale(0.95);
+            background: var(--primary-dark);
+        }
+
+        .btn-whatsapp {
+            background: #25D366;
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        #click-zone {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #tap-instruction {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.6);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            pointer-events: none;
+            z-index: 6;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div id="viewport">
+        <div id="stars-group"></div>
+
+        <div class="mountain-bg"></div>
+        <div class="mountain-main"></div>
+        <div class="trail"></div>
+        <div class="summit-zone">🚩</div>
+
+        <!-- Els punts de control calculats sobre el camí -->
+        <div class="milestone-marker" style="left: 82%; bottom: 12.2%;">
+            <div class="milestone-label">Km 3</div>
+            <div class="milestone-dot"></div>
+        </div>
+        <div class="milestone-marker" style="left: 59%; bottom: 27.3%;">
+            <div class="milestone-label">Km 7</div>
+            <div class="milestone-dot"></div>
+        </div>
+        <div class="milestone-marker" style="left: 44%; bottom: 36.6%;">
+            <div class="milestone-label">Km 11</div>
+            <div class="milestone-dot"></div>
+        </div>
+        <div class="milestone-marker" style="left: 25%; bottom: 47%;">
+            <div class="milestone-label">Km 15</div>
+            <div class="milestone-dot"></div>
+        </div>
+
+        <!-- El cos del runner amb el cap de Jorge -->
+        <div id="runner-container">
+            <div class="jorge-head"></div>
+            <div class="stick-body">
+                <div class="leg leg-left"></div>
+                <div class="leg leg-right"></div>
+            </div>
+        </div>
+
+        <div id="click-zone" onclick="handleTap()"></div>
+        <div id="tap-instruction">Toca per a córrer! ⚡</div>
+
+        <div class="card-container">
+            
+            <!-- Nivell 1 -->
+            <div id="card-0" class="level-card">
+                <div class="card-title">Km 3 🏖️</div>
+                <div class="card-text">"Hola Jorgito, bueno primer que tot dir-te que l'altre dia a la caleta vas superar les meues expectatives, vaig estar molt a gust i m'ho vaig passar molt bé"</div>
+                <button class="btn" onclick="resumeRace(0)">Seguir pujant</button>
+            </div>
+
+            <!-- Nivell 2 -->
+            <div id="card-1" class="level-card">
+                <div class="card-title">Km 7 💡</div>
+                <div class="card-text">"He pensat en fer-te una sorpresa que estic segur de que t'agradarà i he pensat en proposar-t'ho d'una manera original. També per animar-te un poc el dia que hui et toca treballar tot el dia."</div>
+                <button class="btn" onclick="resumeRace(1)">Continuar ruta</button>
+            </div>
+
+            <!-- Nivell 3 -->
+            <div id="card-2" class="level-card">
+                <div class="card-title">Km 11 💻</div>
+                <div class="card-text">"Aprofite per a dir-te que he fet uns canvis a la teua web i bueno, al igual podriem aprofitar, si te pareix bé el dia que fem este plan per a pegar-li una miradeta junts."</div>
+                <button class="btn" onclick="resumeRace(2)">Ja falta poc</button>
+            </div>
+
+            <!-- Nivell 4 -->
+            <div id="card-3" class="level-card">
+                <div class="card-title">Km 15 🗓️</div>
+                <div class="card-text">"No sé si tens algun dia lliure o que te vinga bé aquesta setmana que ve, el plan hauria de ser de nit. També he pensat que com em vas dir que el dia 21 vas de vesprada, podem fer-ho el dia 20."</div>
+                <button class="btn" onclick="resumeRace(3)">Atacar el cim!</button>
+            </div>
+
+            <!-- Final -->
+            <div id="card-4" class="level-card">
+                <div class="card-title">🏆 CIM ACONSEGUIT! (Km 18) 🏆</div>
+                <div class="card-text">"Bueno, dime tu que penses i fem. Deixa't sorprendre. Soles et vaig dir que jo pase a per tu i anem cap on he pensat."</div>
+                <a href="https://wa.me/34614393746?text=He%20arribat%20al%20cim!" class="btn btn-whatsapp">Respondre a WhatsApp 🚀</a>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const route = [
+            { left: 100, bottom: 0 },
+            { left: 85, bottom: 10 },
+            { left: 70, bottom: 21 },
+            { left: 55, bottom: 30 },
+            { left: 40, bottom: 39 },
+            { left: 25, bottom: 47 },
+            { left: 17, bottom: 53 }
+        ];
+
+        const milestones = [3, 6, 9, 12, 15]; 
+
+        let currentStep = 0;
+        let activeLevel = 0;
+        let isRunningAllowed = true;
+        let stopRunnerTimeout;
+
+        const runnerContainer = document.getElementById('runner-container');
+        const viewport = document.getElementById('viewport');
+        const instruction = document.getElementById('tap-instruction');
+
+        const starsGroup = document.getElementById('stars-group');
+        for (let i = 0; i < 35; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.top = Math.random() * 45 + '%';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.animationDelay = Math.random() * 2 + 's';
+            starsGroup.appendChild(star);
+        }
+
+        updateRunnerPosition(0);
+
+        function handleTap() {
+            if (!isRunningAllowed || activeLevel >= milestones.length) return;
+
+            currentStep++;
+
+            if (currentStep === 1) {
+                instruction.style.display = 'none';
+            }
+
+            const totalPositions = route.length - 1;
+            const progress = currentStep / milestones[milestones.length - 1]; 
+            const routeIndex = Math.min(Math.floor(progress * totalPositions), totalPositions - 1);
+            
+            runnerContainer.classList.add('running');
+            clearTimeout(stopRunnerTimeout);
+            stopRunnerTimeout = setTimeout(() => runnerContainer.classList.remove('running'), 200);
+
+            const segmentProgress = (progress * totalPositions) - routeIndex;
+            const currentLeft = route[routeIndex].left + (route[routeIndex + 1].left - route[routeIndex].left) * segmentProgress;
+            const currentBottom = route[routeIndex].bottom + (route[routeIndex + 1].bottom - route[routeIndex].bottom) * segmentProgress;
+
+            runnerContainer.style.left = `${currentLeft}%`;
+            runnerContainer.style.bottom = `${currentBottom}%`;
+
+            if (currentStep >= milestones[activeLevel]) {
+                triggerMilestone(activeLevel);
+            }
+        }
+
+        function updateRunnerPosition(index) {
+            const pos = route[Math.min(index, route.length - 1)];
+            runnerContainer.style.left = `${pos.left}%`;
+            runnerContainer.style.bottom = `${pos.bottom}%`;
+        }
+
+        function triggerMilestone(level) {
+            isRunningAllowed = false;
+            document.getElementById(`card-${level}`).style.display = 'block';
+
+            if (level === 3) {
+                viewport.classList.add('night');
+            }
+        }
+
+        function resumeRace(level) {
+            document.getElementById(`card-${level}`).style.display = 'none';
+            activeLevel++;
+            isRunningAllowed = true;
+            
+            updateRunnerPosition(level + 1);
+        }
+    </script>
+</body>
+</html>
